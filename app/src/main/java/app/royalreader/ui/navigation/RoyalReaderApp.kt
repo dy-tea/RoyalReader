@@ -1,6 +1,7 @@
 package app.royalreader.ui.navigation
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -8,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -15,6 +17,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import app.royalreader.R
 
 private val TOP_LEVEL_ROUTES = setOf(Routes.LIBRARY, Routes.DISCOVER, Routes.STATS, Routes.SETTINGS)
 
@@ -40,25 +43,45 @@ fun RoyalReaderApp() {
                     NavigationBarItem(
                         selected = currentRoute == Routes.LIBRARY,
                         onClick = { navigateToTab(navController, Routes.LIBRARY) },
-                        icon = { }, // TODO: add icon
+                        icon = {
+                            Icon(
+                                painter = painterResource(R.drawable.shelves_24px),
+                                contentDescription = null
+                            )
+                        },
                         label = { Text("Library") }
                     )
                     NavigationBarItem(
                         selected = currentRoute == Routes.DISCOVER,
                         onClick = { navigateToTab(navController, Routes.DISCOVER) },
-                        icon = { }, // TODO: add icon
+                        icon = {
+                            Icon(
+                                painter = painterResource(R.drawable.explore_24px),
+                                contentDescription = null
+                            )
+                        },
                         label = { Text("Discover") }
                     )
                     NavigationBarItem(
                         selected = currentRoute == Routes.STATS,
                         onClick = { navigateToTab(navController, Routes.STATS) },
-                        icon = { }, // TODO: add icon
+                        icon = {
+                            Icon(
+                                painter = painterResource(R.drawable.calendar_month_24px),
+                                contentDescription = null
+                            )
+                        },
                         label = { Text("Stats") }
                     )
                     NavigationBarItem(
                         selected = currentRoute == Routes.SETTINGS,
                         onClick = { navigateToTab(navController, Routes.SETTINGS) },
-                        icon = { }, // TODO: add icon
+                        icon = {
+                            Icon(
+                                painter = painterResource(R.drawable.settings_24px),
+                                contentDescription = null
+                            )
+                        },
                         label = { Text("Settings") }
                     )
                 }
