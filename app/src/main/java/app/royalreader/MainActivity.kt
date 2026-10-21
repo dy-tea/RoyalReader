@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import app.royalreader.core.theme.RoyalReaderTheme
+import app.royalreader.ui.navigation.RoyalReaderApp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,7 +20,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RoyalReaderTheme {
-                // RoyalReaderApp()
+                RoyalReaderApp()
             }
         }
     }

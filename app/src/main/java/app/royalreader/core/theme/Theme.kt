@@ -9,21 +9,21 @@ import androidx.compose.ui.graphics.Color
 
 // TODO: improve these
 private val LightColors = lightColorScheme(
-    primary = Color(0xFFE5D9B6),
+    primary = Color(0xFF8B5E3C),
     onPrimary = Color(0xFFFFFFFF),
-    onPrimaryContainer = Color(0xFFF5D996),
-    secondary = Color(0xFFE5D9B6),
-    background = Color(0xFFE5D9B6),
-    surface = Color(0xFFE5D9B6),
+    primaryContainer = Color(0xFFF5E2D3),
+    secondary = Color(0xFF1F2937),
+    background = Color(0xFFFAF7F2),
+    surface = Color(0xFFFAF7F2),
 )
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFF1E201E),
-    onPrimary = Color(0xFF000000),
-    onPrimaryContainer = Color(0xFF2E2002),
-    secondary = Color(0xFF3C3D37),
-    background = Color(0xFF697565),
-    surface = Color(0xFFECDFCC)
+    primary = Color(0xFFE0A96D),
+    onPrimary = Color(0xFF2B1B0E),
+    primaryContainer = Color(0xFF4A3320),
+    secondary = Color(0xFFD1D5DB),
+    background = Color(0xFF121212),
+    surface = Color(0xFF121212),
 )
 
 @Composable
