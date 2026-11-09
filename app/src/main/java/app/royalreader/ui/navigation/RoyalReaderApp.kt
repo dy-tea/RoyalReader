@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -18,10 +19,16 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import app.royalreader.R
+import app.royalreader.ui.bookdetail.BookDetailScreen
+import app.royalreader.ui.discover.DiscoverScreen
+import app.royalreader.ui.library.LibraryScreen
+import app.royalreader.ui.reader.ReaderScreen
+import app.royalreader.ui.settings.SettingsScreen
+import app.royalreader.ui.stats.StatsScreen
 
 private val TOP_LEVEL_ROUTES = setOf(Routes.LIBRARY, Routes.DISCOVER, Routes.STATS, Routes.SETTINGS)
 
-private fun navigateToTab(navController: androidx.navigation.NavController, route: String) {
+private fun navigateToTab(navController: NavHostController, route: String) {
     navController.navigate(route) {
         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true
@@ -94,22 +101,33 @@ fun RoyalReaderApp() {
             modifier = Modifier.padding(padding)
         ) {
             composable(Routes.LIBRARY) {
-                // TODO: LibraryScreen
+                LibraryScreen(
+                    onBookClick = { novelID -> navController.navigate(Routes.bookDetail(novelID)) },
+                    onDiscoverClick = { navigateToTab(navController, Routes.DISCOVER) },
+                )
             }
             composable(Routes.DISCOVER) {
-                // TODO: DiscoverScreen
+                DiscoverScreen(
+                    onBookClick = { novelID -> navController.navigate(Routes.bookDetail(novelID)) },
+                )
             }
             composable(Routes.STATS) {
-                // TODO: StatsScreen
+                StatsScreen()
             }
             composable(Routes.SETTINGS) {
-                // TODO: SettingsScreen
+                SettingsScreen()
             }
             composable(
                 route = Routes.BOOK_DETAIL,
                 arguments = listOf(navArgument("novelID") { type = NavType.LongType }),
             ) {
-                // TODO: BookDetailScreen
+                BookDetailScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onReadChapter = { novelID, chapterID ->
+                        navController.navigate(Routes.reader(novelID, chapterID))
+                    },
+                    onDiscoverClick = { navigateToTab(navController, Routes.DISCOVER) },
+                )
             }
             composable(
                 route = Routes.READER,
@@ -118,7 +136,14 @@ fun RoyalReaderApp() {
                     navArgument("chapterID") { type = NavType.LongType },
                 )
             ) {
-                // TODO: ReaderScreen
+                ReaderScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onOpenChapter = { novelID, chapterID ->
+                        navController.navigate(Routes.reader(novelID, chapterID)) {
+                            popUpTo(Routes.READER) { inclusive = true }
+                        }
+                    },
+                )
             }
         }
     }
