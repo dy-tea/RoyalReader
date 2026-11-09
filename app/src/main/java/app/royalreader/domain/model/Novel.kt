@@ -8,7 +8,7 @@ package app.royalreader.domain.model
 data class Novel(
     val id: Long,
     val title: String,
-    val author: String,
+    val author: String = "",
     val coverURL: String? = null,
     val description: String = "",
     val tags: List<String> = emptyList(),

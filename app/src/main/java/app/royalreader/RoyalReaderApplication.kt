@@ -1,11 +1,7 @@
 package app.royalreader
 
 import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
 
-class RoyalReaderApplication : Application() {
-    override fun onCreate() {
-        super.onCreate()
-        // TODO: schedule period sync here
-    }
-
-}
+@HiltAndroidApp
+class RoyalReaderApplication : Application()
