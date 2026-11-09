@@ -18,12 +18,12 @@ class RoyalRoadClient(
     private val client: OkHttpClient,
     private val base: String = BASE_URL,
 ) {
-    suspend fun popular(): List<Novel> = fetch("$base/fictions/popular") { RoyalRoadParser.parseFictionList(it) }
+    suspend fun popular(): List<Novel> = fetch("$base/fictions/best-rated") { RoyalRoadParser.parseFictionList(it) }
 
-    suspend fun latest(): List<Novel> = fetch("$base/fictions/updated") { RoyalRoadParser.parseFictionList(it) }
+    suspend fun latest(): List<Novel> = fetch("$base/fictions/latest-updates") { RoyalRoadParser.parseFictionList(it) }
 
     suspend fun search(query: String): List<Novel> =
-        fetch("$base/search?title=${query.replace(' ', '+')}") { RoyalRoadParser.parseFictionList(it) }
+        fetch("$base/fictions/search?title=${query.replace(' ', '+')}") { RoyalRoadParser.parseFictionList(it) }
 
     suspend fun getFiction(novelID: Long): FictionDetails =
         fetch("$base/fiction/$novelID") { RoyalRoadParser.parseFiction(it, novelID) }
