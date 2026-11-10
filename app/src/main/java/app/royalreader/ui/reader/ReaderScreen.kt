@@ -1,5 +1,10 @@
 package app.royalreader.ui.reader
 
+import android.database.ContentObserver
+import android.net.Uri
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -31,7 +36,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -39,12 +46,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import app.royalreader.core.LocalAutoBrightness
+import app.royalreader.core.LocalReducedAnimations
 import app.royalreader.core.theme.ReaderPalette
 import app.royalreader.core.theme.ReaderPalettes
 
@@ -76,6 +86,8 @@ private fun ReaderLayout(
     onOpenChapter: (novelID: Long, chapterID: Long) -> Unit,
 ) {
     val palette = ReaderPalettes.byID(state.settings.paletteID)
+    val reducedAnimations = LocalReducedAnimations.current
+    val dimAlpha = rememberSystemDimAlpha(enabled = LocalAutoBrightness.current)
     // Controls are toggled by tapping the reading surface.
     var controlsVisible by rememberSaveable { mutableStateOf(true) }
     val toggleControls = { controlsVisible = !controlsVisible }
@@ -116,13 +128,17 @@ private fun ReaderLayout(
             }
         }
 
+        // Ambient dimming overlay follows the system (auto) brightness
+        if (dimAlpha > 0f) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(Color.Black.copy(alpha = dimAlpha)),
+            )
+        }
+
         if (state.chapter != null) {
-            AnimatedVisibility(
-                visible = controlsVisible,
-                enter = slideInVertically { it } + fadeIn(),
-                exit = slideOutVertically { it } + fadeOut(),
-                modifier = Modifier.align(Alignment.BottomCenter),
-            ) {
+            val controls: @Composable () -> Unit = {
                 ReaderControls(
                     state = state,
                     palette = palette,
@@ -131,8 +147,66 @@ private fun ReaderLayout(
                     onOpenChapter = onOpenChapter,
                 )
             }
+            if (reducedAnimations) {
+                if (controlsVisible) {
+                    Box(modifier = Modifier.align(Alignment.BottomCenter)) { controls() }
+                }
+            } else {
+                AnimatedVisibility(
+                    visible = controlsVisible,
+                    enter = slideInVertically { it } + fadeIn(),
+                    exit = slideOutVertically { it } + fadeOut(),
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                ) {
+                    controls()
+                }
+            }
         }
     }
+}
+
+/**
+ * Overlay alpha for a system brightness raw value (0..255): full brightness
+ * means no overlay, a dark environment dims the surface to at most 70%.
+ **/
+object ReaderDimming {
+    const val MIN_SURFACE = 0.3f
+
+    fun overlayAlpha(rawBrightness: Int): Float {
+        val fraction = (rawBrightness / 255f).coerceIn(0f, 1f)
+        return (1f - MIN_SURFACE - fraction * (1f - MIN_SURFACE)).coerceIn(0f, 1f - MIN_SURFACE)
+    }
+}
+
+/**
+ * Reads the current system brightness.
+ **/
+@Composable
+private fun rememberSystemDimAlpha(enabled: Boolean): Float {
+    if (!enabled) return 0f
+    val context = LocalContext.current
+    var alpha by remember { mutableFloatStateOf(0f) }
+    DisposableEffect(context, enabled) {
+        val resolver = context.contentResolver
+        val autoKey = "screen_auto_brightness"
+        fun read() {
+            val raw = runCatching { Settings.System.getInt(resolver, autoKey) }
+                .recoverCatching { Settings.System.getInt(resolver, Settings.System.SCREEN_BRIGHTNESS) }
+                .getOrDefault(255)
+            alpha = ReaderDimming.overlayAlpha(raw)
+        }
+        val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean, uri: Uri?) = read()
+        }
+        val uris = listOf(
+            Settings.System.getUriFor(autoKey),
+            Settings.System.getUriFor(Settings.System.SCREEN_BRIGHTNESS),
+        )
+        uris.forEach { uri -> resolver.registerContentObserver(uri, false, observer) }
+        read()
+        onDispose { resolver.unregisterContentObserver(observer) }
+    }
+    return alpha
 }
 
 @Composable

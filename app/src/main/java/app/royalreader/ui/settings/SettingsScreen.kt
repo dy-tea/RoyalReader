@@ -17,23 +17,22 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 
 /**
  * Global app settings.
  **/
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen() {
-    // v1 placeholder toggles; persistence lands with the global preferences store.
-    var reducedAnimations by remember { mutableStateOf(false) }
-    var autoBrightness by remember { mutableStateOf(false) }
+fun SettingsScreen(
+    viewmodel: SettingsViewModel = hiltViewModel(),
+) {
+    val state by viewmodel.uiState.collectAsState()
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Settings") }) },
@@ -46,16 +45,16 @@ fun SettingsScreen() {
         ) {
             SettingsToggle(
                 title = "Reduced animations",
-                subtitle = "Skip transitions to save battery",
-                checked = reducedAnimations,
-                onCheckedChange = { reducedAnimations = it },
+                subtitle = "Skip reader transitions to save battery",
+                checked = state.reducedAnimations,
+                onCheckedChange = viewmodel::setReducedAnimations,
             )
             HorizontalDivider()
             SettingsToggle(
                 title = "Auto brightness",
-                subtitle = "Follow the system brightness automatically",
-                checked = autoBrightness,
-                onCheckedChange = { autoBrightness = it },
+                subtitle = "Dim the reading surface as system brightness falls",
+                checked = state.autoBrightness,
+                onCheckedChange = viewmodel::setAutoBrightness,
             )
             HorizontalDivider()
             Spacer(modifier = Modifier.height(16.dp))
