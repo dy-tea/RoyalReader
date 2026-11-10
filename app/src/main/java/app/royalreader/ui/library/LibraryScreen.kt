@@ -91,7 +91,6 @@ fun LibraryScreen(
                             )
                         },
                         onDetailsClick = { onBookClick(entry.novel.id) },
-                        onLongClick = { viewmodel.removeFromLibrary(entry.novel.id) },
                     )
                 }
             }
@@ -104,13 +103,12 @@ private fun NovelCard(
     entry: LibraryEntry,
     onReadClick: () -> Unit,
     onDetailsClick: () -> Unit,
-    onLongClick: () -> Unit,
 ) {
     val novel = entry.novel
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .combinedClickable(onClick = onDetailsClick, onLongClick = onLongClick),
+            .combinedClickable(onClick = onDetailsClick),
     ) {
         Box(
             modifier = Modifier.fillMaxWidth(),
@@ -160,13 +158,6 @@ private fun NovelCard(
                     Text(text = "Details", maxLines = 1)
                 }
             }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Long-press to remove",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-            )
         }
     }
 }
