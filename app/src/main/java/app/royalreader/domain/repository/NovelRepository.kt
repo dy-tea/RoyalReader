@@ -3,6 +3,7 @@ package app.royalreader.domain.repository
 import app.royalreader.domain.model.Chapter
 import app.royalreader.domain.model.DailyReadingTime
 import app.royalreader.domain.model.FictionDetails
+import app.royalreader.domain.model.LibraryEntry
 import app.royalreader.domain.model.Novel
 import app.royalreader.domain.model.ReaderSettings
 import app.royalreader.domain.model.ReadingProgress
@@ -30,9 +31,17 @@ interface NovelRepository {
     suspend fun getFiction(novelID: Long): FictionDetails
 
     /**
-     * Novels added to library by user, latest first.
+     * Novels added to library by user, newest first, each with the chapter
+     * the user would resume from, if any.
      */
-    fun observeLibrary(): Flow<List<Novel>>
+    fun observeLibrary(): Flow<List<LibraryEntry>>
+
+    /**
+     * The chapter the reader should open when the user continues a book:
+     * the saved progress chapter, else the first unread one, else chapter one.
+     * Null when the table of contents is not cached yet.
+     */
+    suspend fun resumeChapter(novelID: Long): Chapter?
 
     /**
      * Observe single novel from database by [novelID], null if not found.

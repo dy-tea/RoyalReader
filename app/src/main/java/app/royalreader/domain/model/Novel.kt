@@ -23,3 +23,12 @@ data class FictionDetails(
     val novel: Novel,
     val chapters: List<Chapter>,
 )
+
+/**
+ * A library book with the chapter the user should resume from, when any.
+ * [resumeChapterID] is the saved progress chapter; null if never opened.
+ **/
+data class LibraryEntry(
+    val novel: Novel,
+    val resumeChapterID: Long? = null,
+)

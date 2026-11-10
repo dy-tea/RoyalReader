@@ -1,6 +1,7 @@
 package app.royalreader.data.local.db
 
 import androidx.room.Dao
+import androidx.room.Embedded
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -9,8 +10,16 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NovelDao {
-    @Query("SELECT * FROM novels WHERE inLibrary = 1 ORDER BY addedToLibraryAtMs DESC")
-    fun observeLibrary(): Flow<List<NovelEntity>>
+    /**
+     * Library entries joined with the saved progress chapter, newest first.
+     * [LibraryBookRow.resumeChapterID] is null for books never opened.
+     **/
+    @Query(
+        "SELECT n.*, p.chapterID AS resumeChapterID FROM novels n " +
+            "LEFT JOIN reading_progress p ON p.novelID = n.id " +
+            "WHERE n.inLibrary = 1 ORDER BY n.addedToLibraryAtMs DESC"
+    )
+    fun observeLibrary(): Flow<List<LibraryBookRow>>
 
     @Query("SELECT * FROM novels WHERE id = :novelID")
     fun observe(novelID: Long): Flow<NovelEntity?>
@@ -48,6 +57,9 @@ interface ChapterDao {
     @Query("SELECT * FROM chapters WHERE novelID = :novelID AND `index` = :index + 1")
     suspend fun getNext(novelID: Long, index: Int): ChapterEntity?
 
+    @Query("SELECT * FROM chapters WHERE novelID = :novelID AND `read` = 0 ORDER BY `index` ASC LIMIT 1")
+    suspend fun getFirstUnread(novelID: Long): ChapterEntity?
+
     @Query("SELECT * FROM chapters WHERE novelID = :novelID AND `index` = :index - 1")
     suspend fun getPrevious(novelID: Long, index: Int): ChapterEntity?
 
@@ -74,6 +86,9 @@ interface ChapterDao {
 interface ProgressDao {
     @Query("SELECT * FROM reading_progress WHERE novelID = :novelID")
     fun observe(novelID: Long): Flow<ReadingProgressEntity?>
+
+    @Query("SELECT * FROM reading_progress WHERE novelID = :novelID")
+    suspend fun get(novelID: Long): ReadingProgressEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(progress: ReadingProgressEntity)
@@ -106,4 +121,12 @@ interface StatsDao {
 data class DailyReadingTimeRow(
     val day: Long,
     val totalMs: Long,
+)
+
+/**
+ * Projection of a library novel plus its saved progress chapter id, if any.
+ **/
+data class LibraryBookRow(
+    @Embedded val novel: NovelEntity,
+    val resumeChapterID: Long?,
 )

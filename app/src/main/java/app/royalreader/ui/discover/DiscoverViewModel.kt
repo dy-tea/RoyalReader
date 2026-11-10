@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 data class DiscoverUiState(
     val query: String = "",
@@ -49,7 +50,7 @@ class DiscoverViewModel @Inject constructor(
         _uiState.update { it.copy(query = query, section = DiscoverUiState.Section.SEARCH) }
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
-            kotlinx.coroutines.delay(400)
+            kotlinx.coroutines.delay(400.milliseconds)
             search(query)
         }
     }

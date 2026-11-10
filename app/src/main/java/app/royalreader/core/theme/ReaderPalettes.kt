@@ -2,7 +2,7 @@ package app.royalreader.core.theme
 
 import androidx.compose.ui.graphics.Color
 
-/*
+/**
  * Palettes for the reading surface.
  **/
 data class ReaderPalette (

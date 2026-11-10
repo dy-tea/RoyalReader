@@ -13,9 +13,6 @@ import java.time.format.DateTimeParseException
 
 /**
  * Parses RoyalRoad HTML into domain models.
- *
- * RoyalRoad's markup is not versioned, so every selection uses several
- * fallbacks and never throws: unsupported layouts simply yield partial data.
  **/
 object RoyalRoadParser {
     private val fictionIDRegex = Regex("""/fiction/(\d+)(?:/.*)?""")
@@ -25,7 +22,6 @@ object RoyalRoadParser {
     fun parseFictionList(document: Document): List<Novel> {
         val items = document.select("div.fiction-list-item")
         if (items.isNotEmpty()) return items.mapNotNull { parseFictionCard(it) }
-        // Fallback: use every fiction title link, enriched with its card if one exists.
         val anchors = document.select("a.fiction-title, a[href*='/fiction/']")
         return anchors.mapNotNull { anchor ->
             closestCard(anchor)?.let { parseFictionCard(it) } ?: parseNovelFromAnchor(anchor)
@@ -47,8 +43,6 @@ object RoyalRoadParser {
         element.parents().firstOrNull { it.hasClass("fiction-list-item") || it.hasClass("fiction-card") }
 
     fun parseFictionCard(card: Element): Novel? {
-        // 2026 layout: the title anchor lives inside <h2 class="fiction-title">;
-        // the only other /fiction/ link on a card is the cover figure (no text).
         val titleAnchor = card.selectFirst("h2.fiction-title a, a.fiction-title")
             ?: card.select("a[href*='/fiction/']").firstOrNull { it.text().isNotBlank() }
             ?: return null
@@ -112,7 +106,7 @@ object RoyalRoadParser {
     }
 
     /**
-     * Result of parsing a chapter page: full text and neighbours for navigation.
+     * Result of parsing a chapter page.
      **/
     data class ChapterContent(
         val title: String,
@@ -140,7 +134,7 @@ object RoyalRoadParser {
             ?: return document.select("p").map { it.text() }.filter { it.isNotBlank() }
         val paragraphs = container.select("p").map { it.text() }.filter { it.isNotBlank() }
         if (paragraphs.isNotEmpty()) return paragraphs
-        // Unusual markup: fall back to the text of every direct block child.
+        // fall back to the text of every direct block child.
         return container.children().map { it.text() }.filter { it.isNotBlank() }
     }
 
@@ -170,7 +164,6 @@ object RoyalRoadParser {
     }
 
     /**
-     * Preferred sources, most reliable first: JSON-LD aggregateRating,
      * "Rating: 4.83 out of 5" aria labels, then star widgets with a numeric title.
      **/
     private fun parseRating(root: Element): Float? {
@@ -188,7 +181,6 @@ object RoyalRoadParser {
             val value = element.attr("title").toFloatOrNull()
             if (value != null && value >= 0.5f && value <= 5f) return value
         }
-        // Legacy widgets: any title-ish attribute holding a bare score.
         val candidates = root.select("span.star-rating, [data-name='rating'], li.rating").toMutableList()
         root.select("[title]").forEach { candidates.add(it) }
         for (element in candidates) {
@@ -202,7 +194,7 @@ object RoyalRoadParser {
 
     /**
      * RoyalRoad renders <time title="2022-04-09T01:08:58" datetime="...">,
-     * sometimes without an explicit zone: interpret missing zone as UTC.
+     * sometimes without an explicit zone, assume UTC.
      **/
     fun parseTimestamp(row: Element): Long? {
         val element = row.selectFirst("time") ?: return null

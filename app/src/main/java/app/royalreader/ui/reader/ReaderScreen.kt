@@ -29,12 +29,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import app.royalreader.core.theme.ReaderPalette
 import app.royalreader.core.theme.ReaderPalettes
 
@@ -86,7 +86,7 @@ private fun ReaderLayout(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    Text(state.error!!, color = palette.text)
+                    Text(state.error, color = palette.text)
                     Spacer(modifier = Modifier.size(12.dp))
                     Button(onClick = viewmodel::retry) { Text("Retry") }
                     TextButton(onClick = onBackClick) { Text("Back") }

@@ -10,15 +10,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -28,7 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import app.royalreader.domain.model.Novel
+import app.royalreader.domain.model.LibraryEntry
 import coil3.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,6 +39,7 @@ import coil3.compose.AsyncImage
 fun LibraryScreen(
     onBookClick: (novelID: Long) -> Unit,
     onDiscoverClick: () -> Unit,
+    onReadChapter: (novelID: Long, chapterID: Long) -> Unit,
     viewmodel: LibraryViewModel = hiltViewModel(),
 ) {
     val state by viewmodel.uiState.collectAsState()
@@ -76,11 +80,18 @@ fun LibraryScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                items(state.books, key = { it.id }) { novel ->
+                items(state.books, key = { it.novel.id }) { entry ->
                     NovelCard(
-                        novel = novel,
-                        onClick = { onBookClick(novel.id) },
-                        onLongClick = { viewmodel.removeFromLibrary(novel.id) },
+                        entry = entry,
+                        onReadClick = {
+                            viewmodel.continueReading(
+                                entry,
+                                onReady = onReadChapter,
+                                onFallback = { onBookClick(entry.novel.id) },
+                            )
+                        },
+                        onDetailsClick = { onBookClick(entry.novel.id) },
+                        onLongClick = { viewmodel.removeFromLibrary(entry.novel.id) },
                     )
                 }
             }
@@ -90,14 +101,16 @@ fun LibraryScreen(
 
 @Composable
 private fun NovelCard(
-    novel: Novel,
-    onClick: () -> Unit,
+    entry: LibraryEntry,
+    onReadClick: () -> Unit,
+    onDetailsClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
+    val novel = entry.novel
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+            .combinedClickable(onClick = onDetailsClick, onLongClick = onLongClick),
     ) {
         Box(
             modifier = Modifier.fillMaxWidth(),
@@ -125,9 +138,31 @@ private fun NovelCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
             )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FilledTonalButton(
+                    onClick = onReadClick,
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(horizontal = 8.dp),
+                ) {
+                    Text(
+                        text = if (entry.resumeChapterID != null) "Continue" else "Start",
+                        maxLines = 1,
+                    )
+                }
+                TextButton(
+                    onClick = onDetailsClick,
+                    contentPadding = PaddingValues(horizontal = 8.dp),
+                ) {
+                    Text(text = "Details", maxLines = 1)
+                }
+            }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Tap to open  •  long-press to remove",
+                text = "Long-press to remove",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,

@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 data class ReaderUiState(
     val novelID: Long = 0L,
@@ -52,8 +53,6 @@ class ReaderViewModel @Inject constructor(
     }
 
     private fun load() = viewModelScope.launch {
-        // Room flows emit promptly (default settings rows or cached rows),
-        // so `first()` is a safe bootstrap snapshot.
         val settings = runCatching { novelRepository.observeReaderSettings(novelID).first() }
         val progress = runCatching { novelRepository.observeProgress(novelID).first() }
         if (settings.isSuccess) {
@@ -143,7 +142,7 @@ class ReaderViewModel @Inject constructor(
      **/
     fun trackReadingTime() = viewModelScope.launch {
         while (isActive) {
-            delay(TICK_MS)
+            delay(TICK_MS.milliseconds)
             readingTimeMs += TICK_MS
             if (readingTimeMs >= FLUSH_MS) {
                 novelRepository.recordReadingTime(novelID, readingTimeMs)

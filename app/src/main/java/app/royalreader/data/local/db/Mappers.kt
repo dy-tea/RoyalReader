@@ -2,6 +2,7 @@ package app.royalreader.data.local.db
 
 import app.royalreader.domain.model.Chapter
 import app.royalreader.domain.model.DailyReadingTime
+import app.royalreader.domain.model.LibraryEntry
 import app.royalreader.domain.model.Novel
 import app.royalreader.domain.model.ReaderSettings
 import app.royalreader.domain.model.ReadingProgress
@@ -83,4 +84,9 @@ fun ReaderSettings.toEntity(): ReaderSettingsEntity = ReaderSettingsEntity(
 fun DailyReadingTimeRow.toDomain(): DailyReadingTime = DailyReadingTime(
     day = day,
     totalMs = totalMs,
+)
+
+fun LibraryBookRow.toDomain(): LibraryEntry = LibraryEntry(
+    novel = novel.toDomain(),
+    resumeChapterID = resumeChapterID,
 )

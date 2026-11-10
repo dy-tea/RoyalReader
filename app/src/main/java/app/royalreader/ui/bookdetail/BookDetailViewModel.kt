@@ -63,7 +63,7 @@ class BookDetailViewModel @Inject constructor(
     }
 
     /**
-     * Fresh novel + chapter rows straight from the database.
+     *  novel + chapter rows from the database.
      **/
     val novelState: StateFlow<Novel?> = novelRepository.observe(novelID)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)

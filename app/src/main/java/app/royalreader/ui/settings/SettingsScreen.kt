@@ -26,7 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 /**
- * Global app settings; per-novel reader settings live in the reader itself.
+ * Global app settings.
  **/
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,7 +65,7 @@ fun SettingsScreen() {
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
             Text(
-                text = "RoyalReader — read RoyalRoad novels offline. " +
+                text = "RoyalReader - read RoyalRoad novels offline. " +
                     "Version 1.0",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

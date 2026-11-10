@@ -10,7 +10,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Stores chapter paragraphs on disk, gzip-compressed to keep space usage low.
+ * Stores chapter paragraphs gzip-compressed on diesk.
  * One file per chapter: files/chapters/{novelID}/{chapterID}.txt.gz
  **/
 @Singleton
@@ -27,7 +27,7 @@ class ChapterStore @Inject constructor(
                 writerTo(paragraphs, out)
             }
         } catch (ignored: IOException) {
-            // Storage errors are non-fatal: reading can retry over the network.
+            // reading can retry over the network.
         }
     }
 

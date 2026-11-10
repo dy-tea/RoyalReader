@@ -27,7 +27,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 /**
- * Calendar of reading time: daily totals for the last month as a bar chart.
+ * Daily totals for the last month as a bar chart.
  **/
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -40,7 +40,7 @@ data class ChapterEntity(
 )
 
 /**
- * Reading progress of a given novel; one row per novel.
+ * Reading progress of a given novel.
  **/
 @Entity(tableName = "reading_progress")
 data class ReadingProgressEntity(

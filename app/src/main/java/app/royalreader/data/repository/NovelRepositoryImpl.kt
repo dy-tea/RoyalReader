@@ -1,6 +1,7 @@
 package app.royalreader.data.repository
 
 import app.royalreader.data.local.db.ChapterDao
+import app.royalreader.data.local.db.LibraryBookRow
 import app.royalreader.data.local.db.NovelDao
 import app.royalreader.data.local.db.ProgressDao
 import app.royalreader.data.local.db.ReaderSettingsDao
@@ -14,6 +15,7 @@ import app.royalreader.data.remote.RoyalRoadClient
 import app.royalreader.domain.model.Chapter
 import app.royalreader.domain.model.DailyReadingTime
 import app.royalreader.domain.model.FictionDetails
+import app.royalreader.domain.model.LibraryEntry
 import app.royalreader.domain.model.Novel
 import app.royalreader.domain.model.ReaderSettings
 import app.royalreader.domain.model.ReadingProgress
@@ -25,10 +27,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
-/**
- * Offline-first repository: browsing hits the network and populates the cache;
- * the library, progress and settings live entirely locally.
- **/
 class NovelRepositoryImpl constructor(
     private val client: RoyalRoadClient,
     private val novelDao: NovelDao,
@@ -86,8 +84,16 @@ class NovelRepositoryImpl constructor(
         return details
     }
 
-    override fun observeLibrary(): Flow<List<Novel>> =
+    override fun observeLibrary(): Flow<List<LibraryEntry>> =
         novelDao.observeLibrary().map { list -> list.map { it.toDomain() } }
+
+    override suspend fun resumeChapter(novelID: Long): Chapter? {
+        progressDao.get(novelID)?.chapterID?.let { id ->
+            chapterDao.get(novelID, id)?.toDomain()?.let { return it }
+        }
+        chapterDao.getFirstUnread(novelID)?.toDomain()?.let { return it }
+        return chapterDao.getByIndex(novelID, 0)?.toDomain()
+    }
 
     override fun observe(novelID: Long): Flow<Novel?> =
         novelDao.observe(novelID).map { it?.toDomain() }

@@ -104,6 +104,9 @@ fun RoyalReaderApp() {
                 LibraryScreen(
                     onBookClick = { novelID -> navController.navigate(Routes.bookDetail(novelID)) },
                     onDiscoverClick = { navigateToTab(navController, Routes.DISCOVER) },
+                    onReadChapter = { novelID, chapterID ->
+                        navController.navigate(Routes.reader(novelID, chapterID))
+                    },
                 )
             }
             composable(Routes.DISCOVER) {

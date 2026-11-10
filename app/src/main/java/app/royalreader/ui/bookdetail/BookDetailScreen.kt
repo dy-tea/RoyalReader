@@ -40,7 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import app.royalreader.domain.model.Chapter
 import coil3.compose.AsyncImage
 
@@ -50,7 +50,12 @@ fun BookDetailScreen(
     onBackClick: () -> Unit,
     onReadChapter: (novelID: Long, chapterID: Long) -> Unit,
     onDiscoverClick: () -> Unit,
-    viewmodel: BookDetailViewModel = hiltViewModel(),
+    viewmodel: BookDetailViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel(
+        checkNotNull<androidx.lifecycle.ViewModelStoreOwner>(LocalViewModelStoreOwner.current) {
+                "No ViewModelStoreOwner was provided via LocalViewModelStoreOwner"
+            },
+        null
+    ),
 ) {
     val uiState by viewmodel.uiState.collectAsState()
     val novel by viewmodel.novelState.collectAsState()
