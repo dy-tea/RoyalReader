@@ -138,6 +138,49 @@ class RoyalRoadParserTest {
     }
 
     @Test
+    fun `chapter page keeps nested tables inside their parent block`() {
+        val doc = parse(
+            """
+            <html><body>
+              <div class="chapter-inner chapter-content">
+                <p>Before.</p>
+                <center>
+                  <div style="max-width: 100%; overflow: auto">
+                    <table width="40%">
+                      <tbody>
+                        <tr>
+                          <td width="100%">
+                            <p>Attributes</p>
+                            <table width="95%">
+                              <tbody>
+                                <tr>
+                                  <td width="56%"><p>Health</p></td>
+                                  <td width="44%"><p>200</p></td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </center>
+                <p>After.</p>
+              </div>
+            </body></html>
+            """.trimIndent()
+        )
+        val content = RoyalRoadParser.parseChapter(doc)
+        assertEquals(3, content.paragraphs.size)
+        assertEquals("Before.", content.paragraphs[0])
+        assertEquals("After.", content.paragraphs[2])
+        assertTrue(content.paragraphs[1].startsWith("<table"))
+        assertTrue(content.paragraphs[1].contains("width=\"40%\""))
+        assertTrue(content.paragraphs[1].contains("Health"))
+        assertEquals(1, content.paragraphs.count { it.contains("<table", ignoreCase = true) })
+    }
+
+    @Test
     fun `chapter page prefers link rel next and prev`() {
         val doc = parse(
             """

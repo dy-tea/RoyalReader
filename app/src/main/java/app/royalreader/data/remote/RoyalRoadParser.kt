@@ -74,9 +74,9 @@ object RoyalRoadParser {
                 ?: "",
             coverURL = parseOgImage(document) ?: parseImageURL(document),
             description = (
-                document.selectFirst("div.description div.hidden-content")
-                    ?: document.selectFirst("div.description")
-                )?.wholeText()?.trim().orEmpty(),
+                    document.selectFirst("div.description div.hidden-content")
+                        ?: document.selectFirst("div.description")
+                    )?.wholeText()?.trim().orEmpty(),
             tags = (document.select("a.fiction-tag").ifEmpty { document.select("span.tags a.genre, a.genre") })
                 .map { it.text() }.filter { it.isNotBlank() },
             rating = parseRating(document),
@@ -131,9 +131,24 @@ object RoyalRoadParser {
         val container = document.selectFirst("div.chapter-inner")
             ?: document.selectFirst("div#chapter-container")
             ?: document.selectFirst("div.rr-composer-blurb")
-            ?: return document.select("p").map { it.text() }.filter { it.isNotBlank() }
-        val paragraphs = container.select("p").map { it.text() }.filter { it.isNotBlank() }
-        if (paragraphs.isNotEmpty()) return paragraphs
+            ?: return document.select("p").map { it.html() }.filter { it.isNotBlank() }
+        // Preserve inline formatting (italics/bold) and tables.
+        val blocks = container.select("p, table").filter { element ->
+            element.parents().none { parent ->
+                parent !== container &&
+                        (parent.tagName().equals("p", ignoreCase = true) ||
+                                parent.tagName().equals("table", ignoreCase = true))
+            }
+        }.mapNotNull { element ->
+            element.ownerDocument()?.outputSettings()?.prettyPrint(false)
+            val html = if (element.tagName().equals("table", ignoreCase = true)) {
+                element.outerHtml()
+            } else {
+                element.html()
+            }
+            html.trim().takeIf { element.text().isNotBlank() }
+        }
+        if (blocks.isNotEmpty()) return blocks
         // fall back to the text of every direct block child.
         return container.children().map { it.text() }.filter { it.isNotBlank() }
     }

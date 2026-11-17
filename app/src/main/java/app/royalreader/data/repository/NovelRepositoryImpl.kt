@@ -27,7 +27,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
-class NovelRepositoryImpl constructor(
+class NovelRepositoryImpl(
     private val client: RoyalRoadClient,
     private val novelDao: NovelDao,
     private val chapterDao: ChapterDao,

@@ -35,7 +35,7 @@ class RoyalRoadClient(
         val response = client.newCall(Request.Builder().url(resolve(url)).build()).execute()
         response.use { body ->
             if (!body.isSuccessful) throw IOException("HTTP ${body.code} fetching $url")
-            Jsoup.parse(body.body!!.byteStream(), Charsets.UTF_8.name(), resolve(url))
+            Jsoup.parse(body.body.byteStream(), Charsets.UTF_8.name(), resolve(url))
         }
     }
 

@@ -40,7 +40,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import app.royalreader.domain.model.LibraryEntry
 import app.royalreader.ui.library.RemoveFromLibraryDialog
 import coil3.compose.AsyncImage
@@ -51,7 +51,12 @@ fun LibraryScreen(
     onBookClick: (novelID: Long) -> Unit,
     onDiscoverClick: () -> Unit,
     onReadChapter: (novelID: Long, chapterID: Long) -> Unit,
-    viewmodel: LibraryViewModel = hiltViewModel(),
+    viewmodel: LibraryViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel(
+        checkNotNull<androidx.lifecycle.ViewModelStoreOwner>(LocalViewModelStoreOwner.current) {
+                "No ViewModelStoreOwner was provided via LocalViewModelStoreOwner"
+            },
+        null
+    ),
 ) {
     val state by viewmodel.uiState.collectAsState()
     val entryToRemove = remember { mutableStateOf<LibraryEntry?>(null) }

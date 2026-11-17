@@ -56,10 +56,19 @@ class ChapterStore @Inject constructor(
 }
 
 internal fun writerTo(paragraphs: List<String>, out: java.io.OutputStream) {
+    out.write((HEADER + SEPARATOR).toByteArray(Charsets.UTF_8))
     out.write(paragraphs.joinToString(SEPARATOR).toByteArray(Charsets.UTF_8))
 }
 
-internal fun readerFrom(input: java.io.InputStream): List<String> =
-    input.readBytes().toString(Charsets.UTF_8).split(SEPARATOR).filter { it.isNotBlank() }
+internal fun readerFrom(input: java.io.InputStream): List<String>? {
+    val text = input.readBytes().toString(Charsets.UTF_8)
+    val prefix = HEADER + SEPARATOR
+    if (!text.startsWith(prefix)) return null
+    return text.removePrefix(prefix).split(SEPARATOR).filter { it.isNotBlank() }
+}
 
-private const val SEPARATOR = "\n"
+private const val HEADER = "royalreader-chapter-v2"
+
+// Block HTML can contain newlines, so SEPARATOR is used to delimit
+// paragraphs in the cache.
+private const val SEPARATOR = "\u0000"

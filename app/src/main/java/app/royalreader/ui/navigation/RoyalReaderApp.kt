@@ -12,7 +12,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -48,7 +48,12 @@ fun RoyalReaderApp() {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     val showBottomBar = currentRoute in TOP_LEVEL_ROUTES
-    val settingsViewModel: SettingsViewModel = hiltViewModel()
+    val settingsViewModel: SettingsViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel(
+        checkNotNull<androidx.lifecycle.ViewModelStoreOwner>(LocalViewModelStoreOwner.current) {
+                "No ViewModelStoreOwner was provided via LocalViewModelStoreOwner"
+            },
+        null
+    )
     val settings by settingsViewModel.uiState.collectAsState()
 
     CompositionLocalProvider(

@@ -46,7 +46,7 @@ import app.royalreader.ui.library.RemoveFromLibraryDialog
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import app.royalreader.domain.model.Novel
 import app.royalreader.ui.discover.DiscoverUiState.Section
 import coil3.compose.AsyncImage
@@ -55,7 +55,12 @@ import coil3.compose.AsyncImage
 @Composable
 fun DiscoverScreen(
     onBookClick: (novelID: Long) -> Unit,
-    viewmodel: DiscoverViewModel = hiltViewModel(),
+    viewmodel: DiscoverViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel(
+        checkNotNull<androidx.lifecycle.ViewModelStoreOwner>(LocalViewModelStoreOwner.current) {
+                "No ViewModelStoreOwner was provided via LocalViewModelStoreOwner"
+            },
+        null
+    ),
 ) {
     val state by viewmodel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
