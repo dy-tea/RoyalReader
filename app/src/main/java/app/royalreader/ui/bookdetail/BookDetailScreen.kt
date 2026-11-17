@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +44,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import app.royalreader.domain.model.Chapter
+import app.royalreader.ui.library.RemoveFromLibraryDialog
 import coil3.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -141,6 +144,7 @@ fun BookDetailScreen(
 
 @Composable
 private fun BookHeader(book: app.royalreader.domain.model.Novel, viewmodel: BookDetailViewModel) {
+    val showRemoveDialog = remember { mutableStateOf(false) }
     Row(verticalAlignment = Alignment.CenterVertically) {
         AsyncImage(
             model = book.coverURL,
@@ -166,13 +170,23 @@ private fun BookHeader(book: app.royalreader.domain.model.Novel, viewmodel: Book
             }
             Spacer(modifier = Modifier.height(8.dp))
             if (book.inLibrary) {
-                FilledTonalButton(onClick = viewmodel::toggleLibrary) {
+                FilledTonalButton(onClick = { showRemoveDialog.value = true }) {
                     Text("Remove from library")
                 }
             } else {
                 Button(onClick = viewmodel::toggleLibrary) {
                     Text("Add to library")
                 }
+            }
+            if (showRemoveDialog.value) {
+                RemoveFromLibraryDialog(
+                    onDismissRequest = { showRemoveDialog.value = false },
+                    onConfirmation = {
+                        viewmodel.toggleLibrary()
+                        showRemoveDialog.value = false
+                    },
+                    dialogText = "Remove \"${book.title}\" from your library?",
+                )
             }
         }
     }

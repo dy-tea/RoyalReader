@@ -14,16 +14,21 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -31,9 +36,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import app.royalreader.ui.library.RemoveFromLibraryDialog
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -50,6 +59,7 @@ fun DiscoverScreen(
 ) {
     val state by viewmodel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val novelToRemove = remember { mutableStateOf<Novel?>(null) }
 
     LaunchedEffect(state.error) {
         state.error?.let { snackbarHostState.showSnackbar(it) }
@@ -114,12 +124,28 @@ fun DiscoverScreen(
                             NovelRow(
                                 novel = novel,
                                 onClick = { onBookClick(novel.id) },
-                                onToggle = { viewmodel.toggleLibrary(novel) },
+                                onToggle = {
+                                    if (novel.inLibrary) {
+                                        novelToRemove.value = novel
+                                    } else {
+                                        viewmodel.toggleLibrary(novel)
+                                    }
+                                },
                                 coverModel = novel.coverURL,
                             )
                         }
                     }
                 }
+            }
+            novelToRemove.value?.let { novel ->
+                RemoveFromLibraryDialog(
+                    onDismissRequest = { novelToRemove.value = null },
+                    onConfirmation = {
+                        viewmodel.toggleLibrary(novel)
+                        novelToRemove.value = null
+                    },
+                    dialogText = "Remove \"${novel.title}\" from your library?",
+                )
             }
         }
     }

@@ -1,5 +1,7 @@
 package app.royalreader.ui.library
 
+import android.app.AlertDialog
+import android.graphics.drawable.Icon
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,15 +25,24 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.royalreader.domain.model.LibraryEntry
+import app.royalreader.ui.library.RemoveFromLibraryDialog
 import coil3.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,6 +54,7 @@ fun LibraryScreen(
     viewmodel: LibraryViewModel = hiltViewModel(),
 ) {
     val state by viewmodel.uiState.collectAsState()
+    val entryToRemove = remember { mutableStateOf<LibraryEntry?>(null) }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Library") }) },
@@ -91,8 +103,19 @@ fun LibraryScreen(
                             )
                         },
                         onDetailsClick = { onBookClick(entry.novel.id) },
+                        onLongClick = { entryToRemove.value = entry },
                     )
                 }
+            }
+            entryToRemove.value?.let { entry ->
+                RemoveFromLibraryDialog(
+                    onDismissRequest = { entryToRemove.value = null },
+                    onConfirmation = {
+                        viewmodel.removeFromLibrary(entry.novel.id)
+                        entryToRemove.value = null
+                    },
+                    dialogText = "Remove \"${entry.novel.title}\" from your library?",
+                )
             }
         }
     }
@@ -103,12 +126,13 @@ private fun NovelCard(
     entry: LibraryEntry,
     onReadClick: () -> Unit,
     onDetailsClick: () -> Unit,
+    onLongClick: () -> Unit = {},
 ) {
     val novel = entry.novel
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .combinedClickable(onClick = onDetailsClick),
+            .combinedClickable(onClick = onDetailsClick, onLongClick = onLongClick),
     ) {
         Box(
             modifier = Modifier.fillMaxWidth(),
@@ -160,4 +184,44 @@ private fun NovelCard(
             }
         }
     }
+}
+
+@Composable
+fun RemoveFromLibraryDialog(
+    onDismissRequest: () -> Unit,
+    onConfirmation: () -> Unit,
+    dialogText: String,
+) {
+    AlertDialog(
+        icon = {
+            Icon(painter = rememberVectorPainter(Icons.Filled.Delete), contentDescription = null)
+        },
+        title = {
+            Text(text = "Remove from library?")
+        },
+        text = {
+            Text(text = dialogText)
+        },
+        onDismissRequest = {
+            onDismissRequest()
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onConfirmation()
+                }
+            ) {
+                Text("Confirm")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    onDismissRequest()
+                }
+            ) {
+                Text("Cancel")
+            }
+        }
+    )
 }
