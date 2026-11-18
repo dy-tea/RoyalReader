@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -64,9 +65,26 @@ fun BookDetailScreen(
     val novel by viewmodel.novelState.collectAsState()
     val chapters by viewmodel.chapterState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var hasLoadedNovel by remember { mutableStateOf(false) }
+    var hasNavigatedBack by remember { mutableStateOf(false) }
+    val safeBack: () -> Unit = {
+        if (!hasNavigatedBack) {
+            hasNavigatedBack = true
+            onBackClick()
+        }
+    }
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let { snackbarHostState.showSnackbar(it) }
+    }
+
+    LaunchedEffect(novel) {
+        if (novel != null) {
+            hasLoadedNovel = true
+        } else if (hasLoadedNovel && !hasNavigatedBack) {
+            hasNavigatedBack = true
+            onBackClick()
+        }
     }
 
     Scaffold(
@@ -113,7 +131,7 @@ fun BookDetailScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    item { BookHeader(book = book, viewmodel = viewmodel) }
+                    item { BookHeader(book = book, viewmodel = viewmodel, onBackClick = safeBack) }
                     if (chapters.isNotEmpty()) {
                         item {
                             Text(
@@ -143,7 +161,11 @@ fun BookDetailScreen(
 }
 
 @Composable
-private fun BookHeader(book: app.royalreader.domain.model.Novel, viewmodel: BookDetailViewModel) {
+private fun BookHeader(
+    book: app.royalreader.domain.model.Novel,
+    viewmodel: BookDetailViewModel,
+    onBackClick: () -> Unit = {},
+) {
     val showRemoveDialog = remember { mutableStateOf(false) }
     Row(verticalAlignment = Alignment.CenterVertically) {
         AsyncImage(
@@ -184,6 +206,7 @@ private fun BookHeader(book: app.royalreader.domain.model.Novel, viewmodel: Book
                     onConfirmation = {
                         viewmodel.toggleLibrary()
                         showRemoveDialog.value = false
+                        onBackClick()
                     },
                     dialogText = "Remove \"${book.title}\" from your library?",
                 )
