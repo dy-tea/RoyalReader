@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -18,6 +19,10 @@ data class BookDetailUiState(
     val loading: Boolean = true,
     val error: String? = null,
     val inLibrary: Boolean = false,
+    val downloading: Boolean = false,
+    val downloadProgress: Float = 0f,
+    val downloadedCount: Int = 0,
+    val totalDownloads: Int = 0,
 )
 
 @HiltViewModel
@@ -59,6 +64,58 @@ class BookDetailViewModel @Inject constructor(
             } else {
                 novelRepository.addToLibrary(novel.copy(inLibrary = true))
             }
+        }
+    }
+
+    fun downloadAllChapters() {
+        val novel = novelState.value ?: return
+        if (_uiState.value.downloading) return
+        viewModelScope.launch {
+            if (!novel.inLibrary) {
+                novelRepository.addToLibrary(novel.copy(inLibrary = true))
+            }
+
+            val chapters = novelRepository.observeChapters(novel.id).first()
+            val total = chapters.size.coerceAtLeast(1)
+            _uiState.value = _uiState.value.copy(
+                downloading = true,
+                downloadProgress = 0f,
+                downloadedCount = 0,
+                totalDownloads = total,
+            )
+
+            var done = 0
+            chapters.forEach { chapter ->
+                runCatching { novelRepository.getChapterContent(novel.id, chapter.id) }
+                done++
+                _uiState.value = _uiState.value.copy(
+                    downloadProgress = done.toFloat() / total.toFloat(),
+                    downloadedCount = done,
+                )
+            }
+
+            _uiState.value = _uiState.value.copy(
+                downloading = false,
+            )
+        }
+    }
+
+    fun downloadSingleChapter(chapterID: Long) {
+        val novel = novelState.value ?: return
+        viewModelScope.launch {
+            if (!novel.inLibrary) {
+                novelRepository.addToLibrary(novel.copy(inLibrary = true))
+            }
+
+            // download single chapter
+            novelRepository.getChapterContent(novel.id, chapterID)
+        }
+    }
+
+    fun deleteChapter(chapterID: Long) {
+        val novel = novelState.value ?: return
+        viewModelScope.launch {
+            novelRepository.deleteChapter(novel.id, chapterID)
         }
     }
 

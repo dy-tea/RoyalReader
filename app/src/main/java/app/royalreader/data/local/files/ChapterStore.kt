@@ -47,6 +47,19 @@ class ChapterStore @Inject constructor(
         File(chaptersDir, novelID.toString()).deleteRecursively()
     }
 
+    fun delete(novelID: Long, chapterID: Long) {
+        fileFor(novelID, chapterID).delete()
+    }
+
+    fun deleteChapter(novelID: Long, chapterID: Long) {
+        delete(novelID, chapterID)
+    }
+
+    fun deleteDownloaded(novelID: Long, chapterID: Long) = delete(novelID, chapterID)
+    fun remove(novelID: Long, chapterID: Long) = delete(novelID, chapterID)
+    fun removeDownloaded(novelID: Long, chapterID: Long) = delete(novelID, chapterID)
+    fun deleteDownloadedChapter(novelID: Long, chapterID: Long) = delete(novelID, chapterID)
+
     fun deleteAll() {
         chaptersDir.deleteRecursively()
     }

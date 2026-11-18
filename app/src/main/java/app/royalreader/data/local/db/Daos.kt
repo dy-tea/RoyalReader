@@ -75,6 +75,18 @@ interface ChapterDao {
     @Query("UPDATE chapters SET downloaded = 0 WHERE novelID = :novelID")
     suspend fun clearDownloaded(novelID: Long)
 
+    @Query("UPDATE chapters SET downloaded = 0 WHERE novelID = :novelID AND id = :chapterID")
+    suspend fun clearDownloaded(novelID: Long, chapterID: Long)
+
+    @Query("UPDATE chapters SET downloaded = 0 WHERE novelID = :novelID AND id = :chapterID")
+    suspend fun markNotDownloaded(novelID: Long, chapterID: Long)
+
+    @Query("UPDATE chapters SET downloaded = 0 WHERE novelID = :novelID AND id = :chapterID")
+    suspend fun deleteDownloaded(novelID: Long, chapterID: Long)
+
+    @Query("UPDATE chapters SET downloaded = 0 WHERE novelID = :novelID AND id = :chapterID")
+    suspend fun removeDownloaded(novelID: Long, chapterID: Long)
+
     @Query("UPDATE chapters SET `read` = 1 WHERE novelID = :novelID AND id = :chapterID")
     suspend fun markRead(novelID: Long, chapterID: Long)
 

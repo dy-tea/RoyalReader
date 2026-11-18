@@ -138,6 +138,12 @@ class NovelRepositoryImpl(
         chapterDao.markRead(novelID, chapterID)
     }
 
+    override suspend fun deleteChapter(novelID: Long, chapterID: Long) {
+        withContext(ioDispatcher) { chapterStore.delete(novelID, chapterID) }
+        chapterDao.markNotDownloaded(novelID, chapterID)
+        chapterDao.clearDownloaded(novelID, chapterID)
+    }
+
     override fun observeProgress(novelID: Long): Flow<ReadingProgress?> =
         progressDao.observe(novelID).map { it?.toDomain() }
 

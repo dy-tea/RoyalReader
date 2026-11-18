@@ -41,9 +41,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import app.royalreader.R
 import app.royalreader.domain.model.Chapter
 import app.royalreader.ui.library.RemoveFromLibraryDialog
 import coil3.compose.AsyncImage
@@ -141,9 +143,12 @@ fun BookDetailScreen(
                             )
                         }
                         items(chapters, key = { it.id }) { chapter ->
-                            ChapterRow(chapter, onClick = {
-                                onReadChapter(viewmodel.novelID, chapter.id)
-                            })
+                            ChapterRow(
+                                chapter = chapter,
+                                onClick = { onReadChapter(viewmodel.novelID, chapter.id) },
+                                onDownload = { viewmodel.downloadSingleChapter(chapter.id) },
+                                onDelete = { viewmodel.deleteChapter(chapter.id) },
+                            )
                         }
                     } else {
                         item {
@@ -167,6 +172,9 @@ private fun BookHeader(
     onBackClick: () -> Unit = {},
 ) {
     val showRemoveDialog = remember { mutableStateOf(false) }
+    val uiState by viewmodel.uiState.collectAsState()
+    val chapters by viewmodel.chapterState.collectAsState()
+    val allDownloaded = chapters.isNotEmpty() && chapters.all { it.downloaded }
     Row(verticalAlignment = Alignment.CenterVertically) {
         AsyncImage(
             model = book.coverURL,
@@ -191,13 +199,36 @@ private fun BookHeader(
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
-            if (book.inLibrary) {
-                FilledTonalButton(onClick = { showRemoveDialog.value = true }) {
-                    Text("Remove from library")
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (book.inLibrary) {
+                    FilledTonalButton(onClick = { showRemoveDialog.value = true }) {
+                        Text("Remove from library")
+                    }
+                } else {
+                    Button(onClick = viewmodel::toggleLibrary) {
+                        Text("Add to library")
+                    }
                 }
-            } else {
-                Button(onClick = viewmodel::toggleLibrary) {
-                    Text("Add to library")
+                if (!allDownloaded) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    if (uiState.downloading) {
+                        CircularProgressIndicator(
+                            progress = { uiState.downloadProgress },
+                            modifier = Modifier.size(24.dp),
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "${uiState.downloadedCount}/${uiState.totalDownloads}",
+                            style = MaterialTheme.typography.labelSmall,
+                        )
+                    } else {
+                        IconButton(onClick = viewmodel::downloadAllChapters) {
+                            Icon(
+                                painter = painterResource(R.drawable.download_for_offline_24px),
+                                "Download all chapters"
+                            )
+                        }
+                    }
                 }
             }
             if (showRemoveDialog.value) {
@@ -225,7 +256,12 @@ private fun BookHeader(
 }
 
 @Composable
-private fun ChapterRow(chapter: Chapter, onClick: () -> Unit) {
+private fun ChapterRow(
+    chapter: Chapter,
+    onClick: () -> Unit,
+    onDownload: () -> Unit = {},
+    onDelete: () -> Unit = {},
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -233,7 +269,19 @@ private fun ChapterRow(chapter: Chapter, onClick: () -> Unit) {
             .clickable(onClick = onClick)
             .padding(vertical = 10.dp),
     ) {
-        Text(chapter.title, style = MaterialTheme.typography.bodyLarge, maxLines = 2)
+        Row (modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(chapter.title, style = MaterialTheme.typography.bodyLarge, maxLines = 2)
+            Spacer(modifier = Modifier.weight(1f))
+            if (chapter.downloaded) {
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Filled.Delete, contentDescription = "Delete downloaded chapter")
+                }
+            } else {
+                IconButton(onClick = onDownload) {
+                    Icon(painter = painterResource(R.drawable.download_for_offline_24px), "Download single chapter")
+                }
+            }
+        }
         if (chapter.read) {
             Text(
                 text = "read",

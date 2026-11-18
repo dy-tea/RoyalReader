@@ -74,6 +74,11 @@ interface NovelRepository {
     suspend fun markChapterRead(novelID: Long, chapterID: Long)
 
     /**
+     * Delete a downloaded chapter's cached file and mark it as not downloaded.
+     */
+    suspend fun deleteChapter(novelID: Long, chapterID: Long)
+
+    /**
      * Observe reading progress for a given [novelID], null if never opened.
      */
     fun observeProgress(novelID: Long): Flow<ReadingProgress?>
