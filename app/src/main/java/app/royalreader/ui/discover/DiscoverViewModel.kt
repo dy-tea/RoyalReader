@@ -35,6 +35,19 @@ class DiscoverViewModel @Inject constructor(
 
     init {
         load()
+        // Update novels that have been removed to show the correct button.
+        viewModelScope.launch {
+            novelRepository.observeLibrary().collect { entries ->
+                val libraryIds = entries.map { it.novel.id }.toSet()
+                _uiState.update { state ->
+                    state.copy(
+                        books = state.books.map { book ->
+                            book.copy(inLibrary = book.id in libraryIds)
+                        },
+                    )
+                }
+            }
+        }
     }
 
     fun setSection(section: DiscoverUiState.Section) {
